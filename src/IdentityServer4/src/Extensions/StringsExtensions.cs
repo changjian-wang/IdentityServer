@@ -151,42 +151,57 @@ namespace IdentityServer4.Extensions
                 return false;
             }
 
-            // Allows "/" or "/foo" but not "//" or "/\".
+            // 允许以 "/" 开头的相对路径
             if (url[0] == '/')
             {
-                // url is exactly "/"
-                if (url.Length == 1)
+                // 拒绝 "//" - 协议相对 URL，可能被解析为外部 URL
+                if (url.Length > 1 && url[1] == '/')
                 {
-                    return true;
+                    return false;
                 }
 
-                // url doesn't start with "//" or "/\"
-                if (url[1] != '/' && url[1] != '\\')
+                // 拒绝 "/\" - 某些浏览器会将其视为 "//"
+                if (url.Length > 1 && url[1] == '\\')
                 {
-                    return true;
+                    return false;
                 }
 
-                return false;
+                // 检查是否包含 ASCII 控制字符
+                return !HasControlCharacter(url.AsSpan());
             }
 
-            // Allows "~/" or "~/foo" but not "~//" or "~/\".
-            if (url[0] == '~' && url.Length > 1 && url[1] == '/')
+            // 允许 "~/" 开头的应用相对路径
+            if (url.Length > 1 && url[0] == '~' && url[1] == '/')
             {
-                // url is exactly "~/"
-                if (url.Length == 2)
+                // 拒绝 "~//"
+                if (url.Length > 2 && url[2] == '/')
                 {
-                    return true;
+                    return false;
                 }
 
-                // url doesn't start with "~//" or "~/\"
-                if (url[2] != '/' && url[2] != '\\')
+                // 拒绝 "~/\"
+                if (url.Length > 2 && url[2] == '\\')
                 {
-                    return true;
+                    return false;
                 }
 
-                return false;
+                return !HasControlCharacter(url.AsSpan());
             }
 
+            // 其他格式的 URL 一律拒绝
+            return false;
+        }
+
+        private static bool HasControlCharacter(ReadOnlySpan<char> input)
+        {
+            for (var i = 0; i < input.Length; i++)
+            {
+                // ASCII 控制字符范围: 0x00-0x1F 和 0x7F
+                if (char.IsControl(input[i]))
+                {
+                    return true;
+                }
+            }
             return false;
         }
 

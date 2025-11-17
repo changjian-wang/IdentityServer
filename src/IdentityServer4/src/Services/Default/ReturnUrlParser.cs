@@ -52,6 +52,11 @@ namespace IdentityServer4.Services
         /// </returns>
         public virtual bool IsValidReturnUrl(string returnUrl)
         {
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                return false;
+            }
+
             foreach (var parser in _parsers)
             {
                 if (parser.IsValidReturnUrl(returnUrl))

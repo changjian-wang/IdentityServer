@@ -146,6 +146,18 @@ namespace IdentityServer4.Services
 
         public bool IsValidReturnUrl(string returnUrl)
         {
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                _logger.LogTrace("IsValidReturnUrl false: returnUrl is null or whitespace");
+                return false;
+            }
+
+            if (returnUrl.IsLocalUrl())
+            {
+                _logger.LogTrace("IsValidReturnUrl true - local URL");
+                return true;
+            }
+
             var result = _returnUrlParser.IsValidReturnUrl(returnUrl);
 
             if (result)

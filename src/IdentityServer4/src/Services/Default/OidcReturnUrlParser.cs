@@ -59,6 +59,12 @@ namespace IdentityServer4.Services
 
         public bool IsValidReturnUrl(string returnUrl)
         {
+            if (string.IsNullOrWhiteSpace(returnUrl))
+            {
+                _logger.LogTrace("returnUrl is null or empty");
+                return false;
+            }
+
             if (returnUrl.IsLocalUrl())
             {
                 var index = returnUrl.IndexOf('?');
@@ -73,6 +79,14 @@ namespace IdentityServer4.Services
                     _logger.LogTrace("returnUrl is valid");
                     return true;
                 }
+                else
+                {
+                    _logger.LogWarning("returnUrl is local but does not point to authorize endpoint: {returnUrl}", returnUrl);
+                }
+            }
+            else
+            {
+                _logger.LogWarning("returnUrl is not a local URL: {returnUrl}", returnUrl);
             }
 
             _logger.LogTrace("returnUrl is not valid");
